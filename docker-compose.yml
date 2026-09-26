@@ -1,0 +1,35 @@
+services:
+  maestro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/gavmor/maestro:latest
+    container_name: maestro
+    restart: unless-stopped
+    ports:
+      # Maps to host port 7861 by default to prevent conflict with any existing services on port 7860
+      - "${HOST_PORT:-7861}:7860"
+    environment:
+      - SERVER_NAME=0.0.0.0
+      - SERVER_PORT=7860
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+      - HF_HOME=/home/user/.cache/huggingface
+    volumes:
+      # Persistent storage for checkpoints/models
+      - ./app/ckpts:/workspace/app/ckpts
+      # Persistent storage for generated media outputs
+      - ./app/outputs:/workspace/app/outputs
+      # Persistent storage for LoRAs
+      - ./app/loras:/workspace/app/loras
+      # Persistent storage for user settings
+      - ./app/settings:/workspace/app/settings
+      # Mount host Hugging Face cache so common models aren't redownloaded
+      - ~/.cache/huggingface:/home/user/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
