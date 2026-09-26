@@ -80,8 +80,10 @@ COPY --from=ui-builder /app/ui/dist /workspace/ui/dist
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Create non-root user and persistent directories
-RUN useradd -u 1000 -ms /bin/bash user && \
+# Ubuntu 24.04 includes a default 'ubuntu' user with UID 1000; remove it first
+RUN (userdel -r ubuntu 2>/dev/null || true) && \
+    (groupdel ubuntu 2>/dev/null || true) && \
+    useradd -u 1000 -ms /bin/bash user && \
     mkdir -p /home/user/.cache/huggingface \
              /workspace/app/ckpts \
              /workspace/app/outputs \
